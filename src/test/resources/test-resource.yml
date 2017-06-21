@@ -7,5 +7,13 @@ reddit:
 slack:
 
 twitter:
+  api_key: your api key here
+  api_secret: your api secret here
+  access_token: access token here
+  access_token_secret: access token secret here
+  app_auth_url: https://api.twitter.com/oauth2/token
+  request_token_url: https://api.twitter.com/oauth/request_token
+  authorize_secure_url: https://api.twitter.com/oauth/authorize
+  access_token_url: https://api.twitter.com/oauth/access_token
 
 youtube:
