@@ -7,10 +7,10 @@ reddit:
 slack:
 
 twitter:
-  api_key: nPlxCkeRLSG6qNZGphIPOg
-  api_secret: ZC9g3jiFMNS2qKGy9w04uURKFJNvvwQlUioSzb6c
-  access_token: 121820760-3VhFPVWLOE9wFapbfKwvEnriTlOGHkiIqOxOEdtN
-  access_token_secret: SecretkxLtyug0yPHruHbgDcmfQjc0skOfI0GhB0SszxeDQTk
+  api_key: ""
+  api_secret: ""
+  access_token: ""
+  access_token_secret: ""
   app_auth_url: https://api.twitter.com/oauth2/token
   request_token_url: https://api.twitter.com/oauth/request_token
   authorize_secure_url: https://api.twitter.com/oauth/authorize
