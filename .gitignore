@@ -4,3 +4,12 @@
 
 *.iml
 local-config.yml
+
+.classpath
+.project
+.settings/
+bin/
+build/
+target/
+work/
+

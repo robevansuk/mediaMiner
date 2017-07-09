@@ -1,0 +1,22 @@
+twitter:
+  api_key: "yourKey"
+  api_secret: "yourSecret"
+  access_token: "yourToken"
+  access_token_secret: "yourTokenSecret"
+  app_auth_url: "https://api.twitter.com/oauth2/token"
+  request_token_url: "https://api.twitter.com/oauth/request_token"
+  authorize_secure_url: "https://api.twitter.com/oauth/authorize"
+  access_token_url: "https://api.twitter.com/oauth/access_token"
+
+facebook:
+
+medium:
+
+reddit:
+
+slack:
+
+
+youtube:
+
+

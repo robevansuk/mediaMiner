@@ -1,23 +1,25 @@
-group 'uk.uk.robevans'
-version '1.0'
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.2.RELEASE")
+  }
+}
 
 apply plugin: 'java'
 apply plugin: 'groovy'
+apply plugin: 'org.springframework.boot'
 
-sourceCompatibility = 1.8
+jar {
+  baseName = 'commentMiner'
+  version =  '0.0.1'
+}
 
 repositories {
   mavenCentral()
 }
 
-dependencies {
-  compile 'org.codehaus.groovy:groovy-all:2.4.7'
-  compile 'org.springframework:spring-context:4.3.4.RELEASE'
-  compile 'org.twitter4j:twitter4j-core:4.0.6'
-
-  testCompile 'junit:junit:4.12'
-  testCompile 'org.spockframework:spock-core:1.1-groovy-2.4-rc-2'
-}
 
 sourceSets {
   main {
@@ -29,3 +31,20 @@ sourceSets {
     }
   }
 }
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+  compile 'org.codehaus.groovy:groovy-all:2.4.12'
+
+  compile 'org.springframework.boot:spring-boot-starter-web'
+  compile 'org.springframework.boot:spring-boot-starter-thymeleaf'
+  compile 'org.springframework.social:spring-social-twitter'
+  compile 'com.fasterxml.jackson.core:jackson-core'
+
+  testCompile 'junit:junit'
+  testCompile 'org.spockframework:spock-core:1.1-groovy-2.4-rc-2'
+  testCompile 'org.springframework.boot:spring-boot-starter-test'
+}
+
