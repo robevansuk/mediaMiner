@@ -39,9 +39,8 @@ dependencies {
   compile 'org.codehaus.groovy:groovy-all:2.4.12'
 
   compile 'org.springframework.boot:spring-boot-starter-web'
-  compile 'org.springframework.boot:spring-boot-starter-thymeleaf'
-  compile 'org.springframework.social:spring-social-twitter'
   compile 'com.fasterxml.jackson.core:jackson-core'
+  compile 'com.twitter:hbc-core:2.2.0'
 
   testCompile 'junit:junit'
   testCompile 'org.spockframework:spock-core:1.1-groovy-2.4-rc-2'
