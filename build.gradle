@@ -41,6 +41,7 @@ dependencies {
   compile 'org.springframework.boot:spring-boot-starter-web'
   compile 'com.fasterxml.jackson.core:jackson-core'
   compile 'com.twitter:hbc-core:2.2.0'
+  compile 'com.google.code.gson:gson:2.8.1'
 
   testCompile 'junit:junit'
   testCompile 'org.spockframework:spock-core:1.1-groovy-2.4-rc-2'
