@@ -149,6 +149,10 @@ public class TwitterStream {
             return msg;
         }
 
+        if (msg== null || aTweet == null) {
+            return "";
+        }
+
         boolean notFound = true;
         for (int i = 0; i < individualSearchTerms.size(); i++) {
             if (aTweet.getText().toLowerCase().contains(individualSearchTerms.get(i))) {
