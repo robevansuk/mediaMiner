@@ -246,7 +246,7 @@ public class TwitterStream {
     private boolean updateNegativeCounter(ATweet aTweet, int i, Integer searchTermIndexToIncrement) {
         int newCount = negativeCounts.get(searchTermIndexToIncrement) + 1;
         negativeCounts.set(searchTermIndexToIncrement, newCount);
-        System.out.printf(":( %d - %s - --- %s%n", individualSearchTerms.get(i), newCount, aTweet.getText().replace("\n", ""));
+        System.out.printf(":( - %s - %d --- %s%n", individualSearchTerms.get(i), newCount, aTweet.getText().replace("\n", ""));
         return true;
     }
 
