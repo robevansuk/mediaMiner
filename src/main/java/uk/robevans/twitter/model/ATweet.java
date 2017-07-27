@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by ren7881 on 24/07/2017.
+ * Created by robevans.uk on 24/07/2017.
  */
 public class ATweet {
     String created_at;

@@ -1,7 +1,7 @@
 package uk.robevans.twitter.model;
 
 /**
- * Created by ren7881 on 24/07/2017.
+ * Created by robevans.uk on 24/07/2017.
  */
 public class TwitterUser {
     String id;

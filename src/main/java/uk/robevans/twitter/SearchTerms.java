@@ -7,12 +7,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by ren7881 on 25/07/2017.
+ * Created by robevans.uk on 25/07/2017.
  */
 @Component
 @ConfigurationProperties(prefix="twitter")
 public class SearchTerms {
+
     private List<String> searchTerms = new ArrayList<>();
+
+    public SearchTerms() { }
+
+    public SearchTerms(String... terms){
+        for (String term : terms) {
+            searchTerms.add(term);
+        }
+    }
+
+    public SearchTerms(List<String> terms){
+       this.searchTerms = terms;
+    }
 
     public List<String> getSearchTerms() {
         return searchTerms;
@@ -31,5 +44,9 @@ public class SearchTerms {
             }
         }
         return individualSearchTerms;
+    }
+
+    public int size() {
+        return searchTerms.size();
     }
 }
