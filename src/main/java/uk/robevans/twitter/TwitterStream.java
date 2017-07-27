@@ -208,10 +208,9 @@ public class TwitterStream {
             return;
         }
 
-        boolean found = true;
+        boolean found = false;
         for (int i = 0; i < individualSearchTerms.size(); i++) {
             if (aTweet.getText().toLowerCase().contains(individualSearchTerms.get(i))) {
-
                 Integer counterIndex = indexForSearchTerm.get(individualSearchTerms.get(i));
                 if (isPositiveMessage(msg)) {
                     found = updatePositiveCount(aTweet, i, counterIndex);
