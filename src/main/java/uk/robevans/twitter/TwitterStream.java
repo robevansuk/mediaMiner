@@ -13,6 +13,8 @@ import com.twitter.hbc.core.event.Event;
 import com.twitter.hbc.core.processor.StringDelimitedProcessor;
 import com.twitter.hbc.httpclient.auth.Authentication;
 import com.twitter.hbc.httpclient.auth.OAuth1;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -32,6 +34,8 @@ import static java.util.Arrays.asList;
  */
 @Component
 public class TwitterStream {
+
+    final static Logger log = LoggerFactory.getLogger(TwitterStream.class);
 
     String apiKey;
     String apiSecret;
@@ -199,12 +203,12 @@ public class TwitterStream {
         try {
             aTweet = gson.fromJson(msg, ATweet.class);
         } catch (JsonSyntaxException e) {
-            e.printStackTrace();
-            System.out.printf("Failed to convert message to Tweet: %s%n", msg);
+            //e.printStackTrace();
+            log.error("Failed to convert message to Tweet: {}", msg);
             return;
         }
 
-        if (msg== null || aTweet == null) {
+        if (msg== null || aTweet == null || aTweet.getText() == null) {
             return;
         }
 
@@ -231,7 +235,11 @@ public class TwitterStream {
             // remove last comma
             if (matchedItems.length()>0) {
                 matchedItems.deleteCharAt(matchedItems.length() - 1);
-                System.out.printf(":| - %s --- %s%n", matchedItems.toString(), aTweet.getText().replace("\n", ""));
+
+                String tweetMade = aTweet.getText().replace("\n", "");
+                String twitterUserUrl = getTwitterUserUrl(aTweet);
+
+                log.info(":| - {} --- {} | {}", matchedItems.toString(), tweetMade, twitterUserUrl);
             }
         }
     }
@@ -239,14 +247,27 @@ public class TwitterStream {
     private boolean updatePositiveCount(ATweet aTweet, int i, Integer counterIndex) {
         int newCount = positiveCounts.get(counterIndex) + 1;
         positiveCounts.set(counterIndex, newCount);
-        System.out.printf(":) - %s - %d --- %s%n", individualSearchTerms.get(i), newCount, aTweet.getText().replace("\n", ""));
+
+        String searchTermFound = individualSearchTerms.get(i);
+        String updatedCounter = newCount + "";
+        String tweetMade = aTweet.getText().replace("\n", "");
+        String twitterUserUrl = getTwitterUserUrl(aTweet);
+        log.info(":) - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
         return true;
+    }
+
+    private String getTwitterUserUrl(ATweet aTweet) {
+        return "https://www.twitter.com/" + aTweet.getUser().getScreen_name();
     }
 
     private boolean updateNegativeCounter(ATweet aTweet, int i, Integer searchTermIndexToIncrement) {
         int newCount = negativeCounts.get(searchTermIndexToIncrement) + 1;
         negativeCounts.set(searchTermIndexToIncrement, newCount);
-        System.out.printf(":( - %s - %d --- %s%n", individualSearchTerms.get(i), newCount, aTweet.getText().replace("\n", ""));
+        String searchTermFound = individualSearchTerms.get(i);
+        String updatedCounter = newCount + "";
+        String tweetMade = aTweet.getText().replace("\n", "");
+        String twitterUserUrl = getTwitterUserUrl(aTweet);
+        log.info(":( - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
         return true;
     }
 
