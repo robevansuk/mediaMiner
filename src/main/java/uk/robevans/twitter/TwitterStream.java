@@ -44,9 +44,11 @@ public class TwitterStream {
 
     Client hosebirdClient;
 
+    UserStreams userStreams;
     SearchTerms searchTerms;
     List<String> allSearchTerms;
     List<String> individualSearchTerms;
+    List<Long> individualUsersToFollow;
 
     Map<String, Integer> indexForSearchTerm;
     BlockingQueue<String> queue;
@@ -61,8 +63,9 @@ public class TwitterStream {
     /**
      * Constructor for testing - this will not start the client
      */
-    public TwitterStream(SearchTerms searchTerms) {
+    public TwitterStream(SearchTerms searchTerms, UserStreams userStreams) {
         this.searchTerms = searchTerms;
+        this.userStreams = userStreams;
         initDataStructures();
     }
 
@@ -71,13 +74,15 @@ public class TwitterStream {
                          @Value("${twitter.api_secret}") String apiSecret,
                          @Value("${twitter.access_token}") String accessToken,
                          @Value("${twitter.access_token_secret}") String accessTokenSecret,
-                         SearchTerms searchTerms) {
+                         SearchTerms searchTerms,
+                         UserStreams userStreams) {
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.accessToken = accessToken;
         this.accessTokenSecret = accessTokenSecret;
 
         this.searchTerms = searchTerms;
+        this.userStreams = userStreams;
         initDataStructures();
         start();
     }
@@ -95,6 +100,7 @@ public class TwitterStream {
 
         this.individualSearchTerms = searchTerms.individualSearchTerms();
         this.allSearchTerms = asList(convertListOfMultipleTermsToListOfSingleTerms(individualSearchTerms));
+        this.individualUsersToFollow = userStreams.getUserIds();
 
         initPositiveCounters(searchTerms.getSearchTerms());
         initNegativeCounters(searchTerms.getSearchTerms());
@@ -109,6 +115,7 @@ public class TwitterStream {
         BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>(100);
 
         searchFilter.trackTerms(allSearchTerms);
+        searchFilter.followings(individualUsersToFollow);
 
         ClientBuilder clientBuilder = new ClientBuilder()
                 .name("Hosebird-Client-01")
@@ -210,6 +217,18 @@ public class TwitterStream {
 
         if (msg== null || aTweet == null || aTweet.getText() == null) {
             return;
+        }
+
+        if(individualUsersToFollow.contains(new Long(aTweet.getUser().getId()))){
+            String tweetMade = aTweet.getText().replace("\n", "");
+            String twitterUserUrl = getTwitterUserUrl(aTweet);
+            log.info("***");
+            log.info("***");
+            log.info("*** {}",twitterUserUrl);
+            log.info("*** {}", tweetMade);
+            log.info("***");
+            log.info("***");
+            // continue to process it like any other tweet after this.
         }
 
         boolean found = false;
