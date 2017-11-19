@@ -13,3 +13,8 @@ build/
 target/
 work/
 
+out
+*.iml
+*.ipr
+*.iws
+.DS_Store

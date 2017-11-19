@@ -1,5 +1,7 @@
 package uk.robevans.twitter.model;
 
+import java.util.List;
+
 /**
  * Created by robevans.uk on 24/07/2017.
  */
@@ -11,6 +13,7 @@ public class TwitterUser {
     String location;
     String url;
     String description;
+    String translator_type;
     Boolean isProtected;
     Boolean verified;
     Integer followers_count;
@@ -18,6 +21,7 @@ public class TwitterUser {
     Integer listed_count;
     Integer favourites_count;
     Integer statuses_count;
+    List<ATweet> statuses;
     String created_at;
     String utc_offset;
     String time_zone;
@@ -39,13 +43,17 @@ public class TwitterUser {
     String profile_banner_url;
     Boolean default_profile;
     Boolean default_profile_image;
-    String following;
+    @Deprecated
+    Boolean following;
     String follow_request_sent;
-    String notifications;
+    @Deprecated
+    Boolean notifications;
+    String withheld_in_countries;
+    String withheld_scope;
 
     public TwitterUser() { }
 
-    public TwitterUser(String id, String id_str, String name, String screen_name, String location, String url, String description, Boolean isProtected, Boolean verified, Integer followers_count, Integer friends_count, Integer listed_count, Integer favourites_count, Integer statuses_count, String created_at, String utc_offset, String time_zone, Boolean geo_enabled, String lang, Boolean contributors_enabled, Boolean is_translator, String profile_background_color, String profile_background_image_url, String profile_background_image_url_https, Boolean profile_background_tile, String profile_link_color, String profile_sidebar_border_color, String profile_sidebar_fill_color, String profile_text_color, Boolean profile_use_background_image, String profile_image_url, String profile_image_url_https, String profile_banner_url, Boolean default_profile, Boolean default_profile_image, String following, String follow_request_sent, String notifications) {
+    public TwitterUser(String id, String id_str, String name, String screen_name, String location, String url, String description, String translator_type, Boolean isProtected, Boolean verified, Integer followers_count, Integer friends_count, Integer listed_count, Integer favourites_count, Integer statuses_count, List<ATweet> statuses, String created_at, String utc_offset, String time_zone, Boolean geo_enabled, String lang, Boolean contributors_enabled, Boolean is_translator, String profile_background_color, String profile_background_image_url, String profile_background_image_url_https, Boolean profile_background_tile, String profile_link_color, String profile_sidebar_border_color, String profile_sidebar_fill_color, String profile_text_color, Boolean profile_use_background_image, String profile_image_url, String profile_image_url_https, String profile_banner_url, Boolean default_profile, Boolean default_profile_image, Boolean following, String follow_request_sent, Boolean notifications, String withheld_in_countries, String withheld_scope) {
         this.id = id;
         this.id_str = id_str;
         this.name = name;
@@ -53,6 +61,7 @@ public class TwitterUser {
         this.location = location;
         this.url = url;
         this.description = description;
+        this.translator_type = translator_type;
         this.isProtected = isProtected;
         this.verified = verified;
         this.followers_count = followers_count;
@@ -60,6 +69,7 @@ public class TwitterUser {
         this.listed_count = listed_count;
         this.favourites_count = favourites_count;
         this.statuses_count = statuses_count;
+        this.statuses = statuses;
         this.created_at = created_at;
         this.utc_offset = utc_offset;
         this.time_zone = time_zone;
@@ -84,6 +94,8 @@ public class TwitterUser {
         this.following = following;
         this.follow_request_sent = follow_request_sent;
         this.notifications = notifications;
+        this.withheld_in_countries = withheld_in_countries;
+        this.withheld_scope = withheld_scope;
     }
 
     public String getId() {
@@ -142,6 +154,14 @@ public class TwitterUser {
         this.description = description;
     }
 
+    public String getTranslator_type() {
+        return translator_type;
+    }
+
+    public void setTranslator_type(String translator_type) {
+        this.translator_type = translator_type;
+    }
+
     public Boolean getProtected() {
         return isProtected;
     }
@@ -196,6 +216,14 @@ public class TwitterUser {
 
     public void setStatuses_count(Integer statuses_count) {
         this.statuses_count = statuses_count;
+    }
+
+    public List<ATweet> getStatuses() {
+        return statuses;
+    }
+
+    public void setStatuses(List<ATweet> statuses) {
+        this.statuses = statuses;
     }
 
     public String getCreated_at() {
@@ -366,11 +394,11 @@ public class TwitterUser {
         this.default_profile_image = default_profile_image;
     }
 
-    public String getFollowing() {
+    public Boolean getFollowing() {
         return following;
     }
 
-    public void setFollowing(String following) {
+    public void setFollowing(Boolean following) {
         this.following = following;
     }
 
@@ -382,11 +410,27 @@ public class TwitterUser {
         this.follow_request_sent = follow_request_sent;
     }
 
-    public String getNotifications() {
+    public Boolean getNotifications() {
         return notifications;
     }
 
-    public void setNotifications(String notifications) {
+    public void setNotifications(Boolean notifications) {
         this.notifications = notifications;
+    }
+
+    public String getWithheld_in_countries() {
+        return withheld_in_countries;
+    }
+
+    public void setWithheld_in_countries(String withheld_in_countries) {
+        this.withheld_in_countries = withheld_in_countries;
+    }
+
+    public String getWithheld_scope() {
+        return withheld_scope;
+    }
+
+    public void setWithheld_scope(String withheld_scope) {
+        this.withheld_scope = withheld_scope;
     }
 }

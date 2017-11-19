@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
@@ -67,19 +68,30 @@ public class UserStreams {
     }
 
     public List<Long> getUserIds() {
-        StringBuilder builder = getUsernamesAsCommaSeparatedListFromSpringConfig();
-
+        List<String> usernames = getUsernamesAsCommaSeparatedListFromSpringConfig();
         setBearerToken();
 
         try {
-            TwitterUser[] twitterUserIds = getTwitterUserIds(builder);
+            List<Long> someUserIds = new ArrayList<>();
+            // Requests only take max of 100 users.
+            for (int i = 0; i<usernames.size(); i=i+100) {
+                List<String> chunkedUserIds;
+                if (i+100 < usernames.size()) {
+                   chunkedUserIds = usernames.subList(i, i+100);
+                } else {
+                    chunkedUserIds = usernames.subList(i, usernames.size());
+                }
 
-            List<Long> usersIds = Arrays.stream(twitterUserIds)
-                    .map(user -> user.getId_str())
-                    .map(Long::new)
-                    .collect(toList());
+                String chunkOfUsers = getChunkAsSingleValue(chunkedUserIds);
 
-            return usersIds;
+                TwitterUser[] twitterUserIds = getTwitterUserIds(chunkOfUsers);
+                someUserIds.addAll(Arrays.stream(twitterUserIds)
+                        .map(user -> user.getId_str())
+                        .map(Long::new)
+                        .collect(toList()));
+
+            }
+            return someUserIds;
         } catch (HttpClientErrorException ex) {
             log.error("GET request Failed for '" + resourcePath + "': " + ex.getResponseBodyAsString());
         }
@@ -87,9 +99,19 @@ public class UserStreams {
         return emptyList();
     }
 
-    private TwitterUser[] getTwitterUserIds(StringBuilder builder) {
+    private String getChunkAsSingleValue(List<String> chunkedUserIds) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < chunkedUserIds.size(); i++) {
+            builder.append(chunkedUserIds.get(i) + ",");
+        }
+        builder.deleteCharAt(builder.length()-1);
+        return builder.toString();
+    }
+
+
+    private TwitterUser[] getTwitterUserIds(String chunkOfUsers) {
         ResponseEntity<TwitterUser[]> responseEntity = restTemplate.exchange(apiBaseUrl + resourcePath +
-                "screen_name=" + builder.toString(),
+                "screen_name=" + chunkOfUsers,
                 GET,
                 generalRequestHeaders("", bearerToken), TwitterUser[].class);
         return responseEntity.getBody();
@@ -102,13 +124,12 @@ public class UserStreams {
         }
     }
 
-    private StringBuilder getUsernamesAsCommaSeparatedListFromSpringConfig() {
-        StringBuilder builder = new StringBuilder("");
+    private List<String> getUsernamesAsCommaSeparatedListFromSpringConfig() {
+        List<String> usernames = new ArrayList<>();
         for (String username : userStreams) {
-            builder.append(username + ",");
+            usernames.add(username);
         }
-        builder.deleteCharAt(builder.length()-1);
-        return builder;
+        return usernames;
     }
 
     private AccessToken getBearerToken() {

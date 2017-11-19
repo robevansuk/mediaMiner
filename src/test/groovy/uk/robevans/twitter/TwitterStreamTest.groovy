@@ -53,14 +53,4 @@ class TwitterStreamTest extends Specification {
         testObject.getIndexForSearchTerm().get("bar") == 0
         testObject.getIndexForSearchTerm().get("buzz") == 1
     }
-
-    @Test
-    "should follow individual users"() {
-        given:
-        List<String> terms = Arrays.asList("foo", "bar", "buzz")
-
-    }
-
-
-
 }

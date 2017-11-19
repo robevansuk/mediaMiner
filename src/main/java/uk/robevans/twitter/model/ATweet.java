@@ -13,44 +13,48 @@ public class ATweet {
     String text;
     List<Integer> display_text_range;
     String source;
+    String rel;
     Boolean truncated;
-    String in_reply_to_status_id;
+    Long in_reply_to_status_id;
     String in_reply_to_status_id_str;
-    String in_reply_to_user_id;
+    Long in_reply_to_user_id;
     String in_reply_to_user_id_str;
     String in_reply_to_screen_name;
     TwitterUser user;
     String geo;
-    String coordinates;
-    String place;
+    Object coordinates; // todo coordinates { coordinates : [], type: string }
+    Object place;
     String contributors;
     Boolean is_quote_status;
+    Integer quote_count;
+    Integer reply_count;
     Integer retweet_count;
     Integer favorite_count;
-    Map<String, List> entities;
-    List<Map> urls;
-    List<String>  user_mentions;
-    List<String> symbols;
-    List<Map> media;
-    Map extended_entities;
+    Object entities;
     Boolean favorited;
+    String current_user_retweet;
+    Boolean withheld_copyright;
+    String withheld_in_countries;
     Boolean retweeted;
     Boolean possibly_sensitive;
     String filter_level;
     String lang;
     String timestamp_ms;
 
-    public ATweet() { }
+    public ATweet() {
+    }
 
-    public ATweet(String created_at, long id, String id_str, String text, List<Integer> display_text_range, String source, Boolean truncated, String in_reply_to_status_id, String in_reply_to_status_id_str, String in_reply_to_user_id, String in_reply_to_user_id_str, String in_reply_to_screen_name,
-                  TwitterUser user, String geo, String coordinates, String place, String contributors, Boolean is_quote_status, Integer retweet_count, Integer favorite_count, Map<String, List> entities, List<Map> urls, List<String> user_mentions, List<String> symbols, List<Map> media, Map extended_entities, Boolean favorited, Boolean retweeted, Boolean possibly_sensitive, String filter_level, String lang, String timestamp_ms) {
+    public ATweet(String created_at, Long id, String id_str, String text, String source, Boolean truncated, List<Integer> display_text_range, String source1, String rel, Boolean truncated1, Long in_reply_to_status_id, String in_reply_to_status_id_str, Long in_reply_to_user_id, String in_reply_to_user_id_str, String in_reply_to_screen_name, TwitterUser user, String geo, Object coordinates, Object place, String contributors, Boolean is_quote_status, Integer quote_count, Integer reply_count, Integer retweet_count, Integer favorite_count, Object entities, Boolean favorited, String current_user_retweet, Boolean withheld_copyright, String withheld_in_countries, Boolean retweeted, Boolean possibly_sensitive, String filter_level, String lang, String timestamp_ms) {
         this.created_at = created_at;
         this.id = id;
         this.id_str = id_str;
         this.text = text;
-        this.display_text_range = display_text_range;
         this.source = source;
         this.truncated = truncated;
+        this.display_text_range = display_text_range;
+        this.source = source1;
+        this.rel = rel;
+        this.truncated = truncated1;
         this.in_reply_to_status_id = in_reply_to_status_id;
         this.in_reply_to_status_id_str = in_reply_to_status_id_str;
         this.in_reply_to_user_id = in_reply_to_user_id;
@@ -62,15 +66,15 @@ public class ATweet {
         this.place = place;
         this.contributors = contributors;
         this.is_quote_status = is_quote_status;
+        this.quote_count = quote_count;
+        this.reply_count = reply_count;
         this.retweet_count = retweet_count;
         this.favorite_count = favorite_count;
         this.entities = entities;
-        this.urls = urls;
-        this.user_mentions = user_mentions;
-        this.symbols = symbols;
-        this.media = media;
-        this.extended_entities = extended_entities;
         this.favorited = favorited;
+        this.current_user_retweet = current_user_retweet;
+        this.withheld_copyright = withheld_copyright;
+        this.withheld_in_countries = withheld_in_countries;
         this.retweeted = retweeted;
         this.possibly_sensitive = possibly_sensitive;
         this.filter_level = filter_level;
@@ -79,6 +83,7 @@ public class ATweet {
     }
 
     public String getCreated_at() {
+
         return created_at;
     }
 
@@ -86,11 +91,11 @@ public class ATweet {
         this.created_at = created_at;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -110,20 +115,20 @@ public class ATweet {
         this.text = text;
     }
 
-    public List<Integer> getDisplay_text_range() {
-        return display_text_range;
-    }
-
-    public void setDisplay_text_range(List<Integer> display_text_range) {
-        this.display_text_range = display_text_range;
-    }
-
     public String getSource() {
         return source;
     }
 
     public void setSource(String source) {
         this.source = source;
+    }
+
+    public String getRel() {
+        return rel;
+    }
+
+    public void setRel(String rel) {
+        this.rel = rel;
     }
 
     public Boolean getTruncated() {
@@ -134,11 +139,11 @@ public class ATweet {
         this.truncated = truncated;
     }
 
-    public String getIn_reply_to_status_id() {
+    public Long getIn_reply_to_status_id() {
         return in_reply_to_status_id;
     }
 
-    public void setIn_reply_to_status_id(String in_reply_to_status_id) {
+    public void setIn_reply_to_status_id(Long in_reply_to_status_id) {
         this.in_reply_to_status_id = in_reply_to_status_id;
     }
 
@@ -150,11 +155,11 @@ public class ATweet {
         this.in_reply_to_status_id_str = in_reply_to_status_id_str;
     }
 
-    public String getIn_reply_to_user_id() {
+    public Long getIn_reply_to_user_id() {
         return in_reply_to_user_id;
     }
 
-    public void setIn_reply_to_user_id(String in_reply_to_user_id) {
+    public void setIn_reply_to_user_id(Long in_reply_to_user_id) {
         this.in_reply_to_user_id = in_reply_to_user_id;
     }
 
@@ -190,19 +195,19 @@ public class ATweet {
         this.geo = geo;
     }
 
-    public String getCoordinates() {
+    public Object getCoordinates() {
         return coordinates;
     }
 
-    public void setCoordinates(String coordinates) {
+    public void setCoordinates(Object coordinates) {
         this.coordinates = coordinates;
     }
 
-    public String getPlace() {
+    public Object getPlace() {
         return place;
     }
 
-    public void setPlace(String place) {
+    public void setPlace(Object place) {
         this.place = place;
     }
 
@@ -222,6 +227,22 @@ public class ATweet {
         this.is_quote_status = is_quote_status;
     }
 
+    public Integer getQuote_count() {
+        return quote_count;
+    }
+
+    public void setQuote_count(Integer quote_count) {
+        this.quote_count = quote_count;
+    }
+
+    public Integer getReply_count() {
+        return reply_count;
+    }
+
+    public void setReply_count(Integer reply_count) {
+        this.reply_count = reply_count;
+    }
+
     public Integer getRetweet_count() {
         return retweet_count;
     }
@@ -238,52 +259,12 @@ public class ATweet {
         this.favorite_count = favorite_count;
     }
 
-    public Map<String, List> getEntities() {
+    public Object getEntities() {
         return entities;
     }
 
-    public void setEntities(Map<String, List> entities) {
+    public void setEntities(Object entities) {
         this.entities = entities;
-    }
-
-    public List<Map> getUrls() {
-        return urls;
-    }
-
-    public void setUrls(List<Map> urls) {
-        this.urls = urls;
-    }
-
-    public List<String> getUser_mentions() {
-        return user_mentions;
-    }
-
-    public void setUser_mentions(List<String> user_mentions) {
-        this.user_mentions = user_mentions;
-    }
-
-    public List<String> getSymbols() {
-        return symbols;
-    }
-
-    public void setSymbols(List<String> symbols) {
-        this.symbols = symbols;
-    }
-
-    public List<Map> getMedia() {
-        return media;
-    }
-
-    public void setMedia(List<Map> media) {
-        this.media = media;
-    }
-
-    public Map getExtended_entities() {
-        return extended_entities;
-    }
-
-    public void setExtended_entities(Map extended_entities) {
-        this.extended_entities = extended_entities;
     }
 
     public Boolean getFavorited() {
@@ -292,6 +273,30 @@ public class ATweet {
 
     public void setFavorited(Boolean favorited) {
         this.favorited = favorited;
+    }
+
+    public String getCurrent_user_retweet() {
+        return current_user_retweet;
+    }
+
+    public void setCurrent_user_retweet(String current_user_retweet) {
+        this.current_user_retweet = current_user_retweet;
+    }
+
+    public Boolean getWithheld_copyright() {
+        return withheld_copyright;
+    }
+
+    public void setWithheld_copyright(Boolean withheld_copyright) {
+        this.withheld_copyright = withheld_copyright;
+    }
+
+    public String getWithheld_in_countries() {
+        return withheld_in_countries;
+    }
+
+    public void setWithheld_in_countries(String withheld_in_countries) {
+        this.withheld_in_countries = withheld_in_countries;
     }
 
     public Boolean getRetweeted() {
@@ -332,5 +337,13 @@ public class ATweet {
 
     public void setTimestamp_ms(String timestamp_ms) {
         this.timestamp_ms = timestamp_ms;
+    }
+
+    public List<Integer> getDisplay_text_range() {
+        return display_text_range;
+    }
+
+    public void setDisplay_text_range(List<Integer> display_text_range) {
+        this.display_text_range = display_text_range;
     }
 }

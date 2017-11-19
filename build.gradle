@@ -39,9 +39,12 @@ dependencies {
   compile 'org.codehaus.groovy:groovy-all:2.4.12'
 
   compile 'org.springframework.boot:spring-boot-starter-web'
+  compile 'org.springframework:spring-jdbc'
   compile 'com.fasterxml.jackson.core:jackson-core'
   compile 'com.twitter:hbc-core:2.2.0'
   compile 'com.google.code.gson:gson:2.8.1'
+  compile 'org.twitter4j:twitter4j:4.0.6'
+  compile 'mysql:mysql-connector-java:8.0.8-dmr'
 
   testCompile 'junit:junit'
   testCompile 'org.spockframework:spock-core:1.1-groovy-2.4-rc-2'

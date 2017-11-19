@@ -20,12 +20,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uk.robevans.twitter.model.ATweet;
 
+import java.io.*;
+import java.lang.reflect.Field;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 
@@ -196,7 +202,7 @@ public class TwitterStream {
     }
 
     public void getMessage() {
-        String msg = null;
+        final String msg;
 
         try {
             msg = queue.take();
@@ -207,11 +213,22 @@ public class TwitterStream {
 
         Gson gson = new Gson();
         ATweet aTweet = null;
+
         try {
             aTweet = gson.fromJson(msg, ATweet.class);
         } catch (JsonSyntaxException e) {
             //e.printStackTrace();
             log.error("Failed to convert message to Tweet: {}", msg);
+            Field[] fields = ATweet.class.getDeclaredFields();
+
+            for (Field field : fields) {
+                String fieldName = field.getName();
+                if (!msg.contains("\"" + fieldName + "\":") ){
+                    log.info("Missing: " + fieldName);
+                }
+            }
+
+
             return;
         }
 
@@ -220,14 +237,10 @@ public class TwitterStream {
         }
 
         if(individualUsersToFollow.contains(new Long(aTweet.getUser().getId()))){
-            String tweetMade = aTweet.getText().replace("\n", "");
+            String tweetMade = getTweet(aTweet);
             String twitterUserUrl = getTwitterUserUrl(aTweet);
-            log.info("***");
-            log.info("***");
             log.info("*** {}",twitterUserUrl);
             log.info("*** {}", tweetMade);
-            log.info("***");
-            log.info("***");
             // continue to process it like any other tweet after this.
         }
 
@@ -255,12 +268,14 @@ public class TwitterStream {
             if (matchedItems.length()>0) {
                 matchedItems.deleteCharAt(matchedItems.length() - 1);
 
-                String tweetMade = aTweet.getText().replace("\n", "");
+                String tweetMade = getTweet(aTweet);
                 String twitterUserUrl = getTwitterUserUrl(aTweet);
-
-                log.info(":| - {} --- {} | {}", matchedItems.toString(), tweetMade, twitterUserUrl);
             }
         }
+    }
+
+    private String getTweet(ATweet aTweet) {
+        return aTweet.getText().replace("\n", "").replace("\\", "\\\\");
     }
 
     private boolean updatePositiveCount(ATweet aTweet, int i, Integer counterIndex) {
@@ -269,9 +284,18 @@ public class TwitterStream {
 
         String searchTermFound = individualSearchTerms.get(i);
         String updatedCounter = newCount + "";
-        String tweetMade = aTweet.getText().replace("\n", "");
+        String tweetMade = getTweet(aTweet);
+
         String twitterUserUrl = getTwitterUserUrl(aTweet);
-        log.info(":) - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
+
+        insertTweet(getTweet(aTweet), aTweet.getUser().getScreen_name(), individualSearchTerms.get(i), ":)" );
+
+        if (aTweet.getRetweet_count() >= 10 ) {
+            log.info("10 :) - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
+        } else {
+            log.info(":) - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
+        }
+
         return true;
     }
 
@@ -284,9 +308,16 @@ public class TwitterStream {
         negativeCounts.set(searchTermIndexToIncrement, newCount);
         String searchTermFound = individualSearchTerms.get(i);
         String updatedCounter = newCount + "";
-        String tweetMade = aTweet.getText().replace("\n", "");
+        String tweetMade = getTweet(aTweet);
         String twitterUserUrl = getTwitterUserUrl(aTweet);
-        log.info(":( - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
+
+        insertTweet(getTweet(aTweet), aTweet.getUser().getScreen_name(), individualSearchTerms.get(i), ":(" );
+
+        if (aTweet.getRetweet_count() >= 10 ) {
+            log.info("10 :( - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
+        } else {
+            log.info(":( - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
+        }
         return true;
     }
 
@@ -373,5 +404,42 @@ public class TwitterStream {
 
     public List<Integer> getNegativeCounts() {
         return negativeCounts;
+    }
+
+    // HTTP GET request
+    private void insertTweet(String tweet, String user, String currency, String sentiment) {
+        try {
+            String url = "http://www.robevans.uk/test.php?"
+                    + "tweet=" + URLEncoder.encode(tweet, StandardCharsets.UTF_8.toString())
+                    + "&user=" + user
+                    + "&coin=" + currency
+                    + "&sentiment=" + URLEncoder.encode(sentiment, StandardCharsets.UTF_8.toString());
+
+            URL obj = null;
+            obj = new URL(url);
+            HttpURLConnection con = null;
+            con = (HttpURLConnection) obj.openConnection();
+
+            // optional default is GET
+            con.setRequestMethod("GET");
+
+//            int responseCode = 0;
+            int responseCode = con.getResponseCode();
+////            log.info("Sending 'GET' request to URL : " + url + " - " + responseCode);
+//            BufferedReader in = null;
+//            String inputLine;
+//            StringBuffer response = new StringBuffer();
+//            in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+//
+//            while ((inputLine = in.readLine()) != null) {
+//                response.append(inputLine);
+//            }
+//            in.close();
+            //print result
+//            log.info(response.toString());
+            con.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
