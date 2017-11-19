@@ -1,0 +1,20 @@
+graphite:
+  image: nextcode/docker-graphite:latest
+  restart: always
+  ports:
+      - "8094:80"
+      - "2003:2003"
+      - "2003:2003/udp"
+  container_name: miner-graphite
+
+grafana:
+    image: grafana/grafana
+    restart: always
+    ports:
+        - "3000:3000"
+    volumes:
+        - "/tmp/grafana:/var/lib/grafana"
+    links:
+        - miner-grafana
+    environment:
+        - GF_SECURITY_ADMIN_PASSWORD=password
