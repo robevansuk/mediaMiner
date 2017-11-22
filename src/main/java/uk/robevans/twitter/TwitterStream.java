@@ -88,6 +88,10 @@ public class TwitterStream {
         this.accessToken = accessToken;
         this.accessTokenSecret = accessTokenSecret;
 
+        if (apiKey==null || apiKey.equals(""))
+            apiKey = System.getenv("twitter.api_key");
+        if (apiSecret==null || apiSecret.equals(""))
+            apiSecret = System.getenv("twitter.api_secret");
         this.searchTerms = searchTerms;
         this.userStreams = userStreams;
         initDataStructures();
