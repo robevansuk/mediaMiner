@@ -20,18 +20,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uk.robevans.twitter.model.ATweet;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 
@@ -139,7 +140,7 @@ public class TwitterStream {
 
     public String convertListOfMultipleTermsToListOfSingleTerms(List<String> terms) {
         StringBuilder builder = new StringBuilder("");
-        int i=0;
+        int i = 0;
         for (String term : terms) {
             builder.append(term);
             if (i != terms.size() - 1) {
@@ -153,6 +154,7 @@ public class TwitterStream {
     /**
      * if we have two search terms in a group - e.g. litecoin,ltc
      * we only want one counter for both terms.
+     *
      * @param terms
      */
     public void initPositiveCounters(List<String> terms) {
@@ -164,6 +166,7 @@ public class TwitterStream {
     /**
      * if we have two search terms in a group - e.g. litecoin,ltc
      * we only want one counter for both terms.
+     *
      * @param terms
      */
     public void initNegativeCounters(List<String> terms) {
@@ -175,16 +178,17 @@ public class TwitterStream {
     /**
      * if we have two search terms in a group - e.g. litecoin,ltc
      * we only want one index for both terms.
-     *
+     * <p>
      * Here we need to break apart the search terms and add the same index
      * for each term
+     *
      * @param terms
      */
     public void initSearchTermIndexList(List<String> terms) {
         for (int i = 0; i < terms.size(); i++) {
             if (terms.get(i).contains(",")) {
                 String[] individualTerms = terms.get(i).split(",");
-                for (String individualTerm : individualTerms){
+                for (String individualTerm : individualTerms) {
                     // add the same index for each term
                     indexForSearchTerm.put(individualTerm, i);
                 }
@@ -202,20 +206,68 @@ public class TwitterStream {
     }
 
     public void getMessage() {
-        final String msg;
+        final String msg = takeMsgFromQueue(queue);
+        final ATweet aTweet = parseJsonToTweet(msg);
 
-        try {
-            msg = queue.take();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (aTweet == null || aTweet.getText() == null) {
             return;
         }
 
-        Gson gson = new Gson();
-        ATweet aTweet = null;
+        int poi = isPoi(aTweet);
+        String tweetText = getTweet(aTweet);
+        String twitterUser =  aTweet.getUser().getScreen_name();
 
+
+        String sentiment = ":|";
+        createEntryIfPoi(aTweet, tweetText, twitterUser, sentiment, poi);
+
+        String searchTermsMatched = findMatchedSearchTerms(tweetText);
+        checkForPositiveSentiment(tweetText, twitterUser, searchTermsMatched);
+        checkForNegativeSentiment(tweetText, twitterUser, searchTermsMatched);
+
+//        boolean found = checkForSearchTerms(tweetText, twitterUserUrl, searchTermsMatched, sentiment, poi);
+
+    }
+
+    private void createEntryIfPoi(ATweet aTweet, String tweetText, String twitterUserUrl, String sentiment, int poi) {
+        logIfPoi(tweetText, twitterUserUrl, poi);
         try {
-            aTweet = gson.fromJson(msg, ATweet.class);
+            if (poi == 1) {
+                String url = createInsertUrl(tweetText, twitterUserUrl, "", sentiment, poi);
+                log.debug(url);
+                insertTweet(url);
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int isPoi(ATweet aTweet) {
+        return individualUsersToFollow.contains(new Long(aTweet.getUser().getId())) ? 1 : 0;
+    }
+
+    private void logIfPoi(String tweetText, String twitterUserUrl, int poi) {
+        if (poi == 1) {
+            log.info("*** {}", twitterUserUrl);
+            log.info("*** {}", tweetText);
+            // continue to process it like any other tweet after this.
+        }
+    }
+
+    private String takeMsgFromQueue(BlockingQueue<String> queue) {
+        String msgFromQueue = "";
+        try {
+            msgFromQueue = queue.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return msgFromQueue;
+    }
+
+    private ATweet parseJsonToTweet(String msg) {
+        Gson gson = new Gson();
+        try {
+            return gson.fromJson(msg, ATweet.class);
         } catch (JsonSyntaxException e) {
             //e.printStackTrace();
             log.error("Failed to convert message to Tweet: {}", msg);
@@ -223,102 +275,85 @@ public class TwitterStream {
 
             for (Field field : fields) {
                 String fieldName = field.getName();
-                if (!msg.contains("\"" + fieldName + "\":") ){
+                if (!msg.contains("\"" + fieldName + "\":")) {
                     log.info("Missing: " + fieldName);
                 }
             }
-
-
-            return;
+            return null;
         }
+    }
 
-        if (msg== null || aTweet == null || aTweet.getText() == null) {
-            return;
-        }
-
-        if(individualUsersToFollow.contains(new Long(aTweet.getUser().getId()))){
-            String tweetMade = getTweet(aTweet);
-            String twitterUserUrl = getTwitterUserUrl(aTweet);
-            log.info("*** {}",twitterUserUrl);
-            log.info("*** {}", tweetMade);
-            // continue to process it like any other tweet after this.
-        }
-
-        boolean found = false;
+    public String findMatchedSearchTerms(String tweetText) {
+        StringBuilder searchTermsMatched = new StringBuilder("");
         for (int i = 0; i < individualSearchTerms.size(); i++) {
-            if (aTweet.getText().toLowerCase().contains(individualSearchTerms.get(i))) {
-                Integer counterIndex = indexForSearchTerm.get(individualSearchTerms.get(i));
-                if (isPositiveMessage(msg)) {
-                    found = updatePositiveCount(aTweet, i, counterIndex);
-                } else if (isNegativeMessage(msg)) {
-                    found = updateNegativeCounter(aTweet, i, counterIndex);
-                }
+            String keyWord = individualSearchTerms.get(i);
+            if (tweetText.toLowerCase().contains(keyWord)) {
+                searchTermsMatched.append(keyWord + ",");
             }
         }
-
-        if (!found) {
-            StringBuilder matchedItems = new StringBuilder("");
-            for (int i = 0; i < individualSearchTerms.size(); i++) {
-                if (aTweet.getText().toLowerCase().contains(individualSearchTerms.get(i))) {
-                    matchedItems.append(individualSearchTerms.get(i));
-                    matchedItems.append(",");
-                }
-            }
-            // remove last comma
-            if (matchedItems.length()>0) {
-                matchedItems.deleteCharAt(matchedItems.length() - 1);
-
-                String tweetMade = getTweet(aTweet);
-                String twitterUserUrl = getTwitterUserUrl(aTweet);
-            }
-        }
+        if (searchTermsMatched.length()>0)
+            searchTermsMatched.deleteCharAt(searchTermsMatched.length()-1);
+        return searchTermsMatched.toString();
     }
 
     private String getTweet(ATweet aTweet) {
-        return aTweet.getText().replace("\n", "").replace("\\", "\\\\");
+        return aTweet.getText()
+                .replace("\n", "")
+                .replace("\\", "\\\\")
+                .replace("'", "\\'")
+                .replace("@", "\\@");
     }
 
-    private boolean updatePositiveCount(ATweet aTweet, int i, Integer counterIndex) {
-        int newCount = positiveCounts.get(counterIndex) + 1;
-        positiveCounts.set(counterIndex, newCount);
-
-        String searchTermFound = individualSearchTerms.get(i);
-        String updatedCounter = newCount + "";
-        String tweetMade = getTweet(aTweet);
-
-        String twitterUserUrl = getTwitterUserUrl(aTweet);
-
-        insertTweet(getTweet(aTweet), aTweet.getUser().getScreen_name(), individualSearchTerms.get(i), ":)" );
-
-        if (aTweet.getRetweet_count() >= 10 ) {
-            log.info("10 :) - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
-        } else {
-            log.info(":) - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
+    private void checkForPositiveSentiment(String tweetText, String twitterUser, String searchTermsMatched) {
+        try {
+            if (isPositiveMessage(tweetText)) {
+                log.info(":) - {} --- {} | {}", searchTermsMatched, "https://www.twitter.com/" + twitterUser, tweetText);
+                String url = createInsertUrl(tweetText, twitterUser, searchTermsMatched, ":)", 0);
+                log.debug(url);
+                insertTweet(url);
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
 
-        return true;
+
+//        createInsertUrl(tweetText, twitterUserUrl, )
+//        int newCount = positiveCounts.get(counterIndex) + 1;
+//        positiveCounts.set(counterIndex, newCount);
+//        String updatedCounter = newCount + "";
+
+//        if (aTweet.getRetweet_count() >= 10) {
+//            log.info("10 :) - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
+//        } else {
+//            log.info(":) - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetText, twitterUserUrl);
+//        }
+
+//        return true;
     }
 
     private String getTwitterUserUrl(ATweet aTweet) {
         return "https://www.twitter.com/" + aTweet.getUser().getScreen_name();
     }
 
-    private boolean updateNegativeCounter(ATweet aTweet, int i, Integer searchTermIndexToIncrement) {
-        int newCount = negativeCounts.get(searchTermIndexToIncrement) + 1;
-        negativeCounts.set(searchTermIndexToIncrement, newCount);
-        String searchTermFound = individualSearchTerms.get(i);
-        String updatedCounter = newCount + "";
-        String tweetMade = getTweet(aTweet);
-        String twitterUserUrl = getTwitterUserUrl(aTweet);
+    private void checkForNegativeSentiment(String tweetText, String twitterUser, String searchTermsMatched) {
 
-        insertTweet(getTweet(aTweet), aTweet.getUser().getScreen_name(), individualSearchTerms.get(i), ":(" );
-
-        if (aTweet.getRetweet_count() >= 10 ) {
-            log.info("10 :( - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
-        } else {
-            log.info(":( - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
+        try {
+            if (isNegativeMessage(tweetText)) {
+                log.info(":( - {} --- {} | {}", searchTermsMatched, "https://www.twitter.com/" + twitterUser, tweetText);
+                String url = createInsertUrl(tweetText, twitterUser, searchTermsMatched, ":(", 0);
+                log.debug(url);
+                insertTweet(url);
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
-        return true;
+
+//        int newCount = negativeCounts.get(searchTermIndexToIncrement) + 1;
+//        negativeCounts.set(searchTermIndexToIncrement, newCount);
+//        String searchTermFound = individualSearchTerms.get(i);
+//        String updatedCounter = newCount + "";
+//        String twitterUserUrl = twitterUser;
+//        return true;
     }
 
     private boolean isNegativeMessage(String msg) {
@@ -332,10 +367,12 @@ public class TwitterStream {
     private boolean isPositiveMessage(String msg) {
         return msg.contains(" :) ") || msg.contains(" :-) ")
                 || msg.contains(":D") || msg.contains(" :-D ")
+                || msg.contains(":d") || msg.contains(" :-d ")
                 || msg.contains("XD") || msg.contains(" X-D ")
+                || msg.contains("Xd") || msg.contains(" X-d ")
                 || msg.contains(" (: ")
                 || msg.contains(" (-: ")
-                || msg.contains("😀🤣"); //smiley emoji
+                || msg.contains("😀"); //smiley emoji
     }
 
     public StatusesFilterEndpoint filterByLocation(
@@ -407,39 +444,37 @@ public class TwitterStream {
     }
 
     // HTTP GET request
-    private void insertTweet(String tweet, String user, String currency, String sentiment) {
+    private void insertTweet(String url) {
         try {
-            String url = "http://www.robevans.uk/test.php?"
-                    + "tweet=" + URLEncoder.encode(tweet, StandardCharsets.UTF_8.toString())
-                    + "&user=" + user
-                    + "&coin=" + currency
-                    + "&sentiment=" + URLEncoder.encode(sentiment, StandardCharsets.UTF_8.toString());
+            URL urlObj = new URL(url);
+            URLConnection connection = urlObj.openConnection();
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-            URL obj = null;
-            obj = new URL(url);
-            HttpURLConnection con = null;
-            con = (HttpURLConnection) obj.openConnection();
-
-            // optional default is GET
-            con.setRequestMethod("GET");
-
-//            int responseCode = 0;
-            int responseCode = con.getResponseCode();
-////            log.info("Sending 'GET' request to URL : " + url + " - " + responseCode);
-//            BufferedReader in = null;
 //            String inputLine;
-//            StringBuffer response = new StringBuffer();
-//            in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-//
-//            while ((inputLine = in.readLine()) != null) {
-//                response.append(inputLine);
-//            }
-//            in.close();
-            //print result
-//            log.info(response.toString());
-            con.disconnect();
-        } catch (Exception e) {
+//            while ((inputLine = in.readLine()) != null)
+//               log.info(inputLine);
+            in.close();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException  e) {
             e.printStackTrace();
         }
+    }
+
+    private String createInsertUrl(String tweet, String user, String currency, String sentiment, int poi) throws UnsupportedEncodingException {
+//        log.info("TWEET: {}", tweet);
+//        log.info("USER: {}", user);
+//        log.info("COIN: {}", currency);
+//        log.info("SENTIMENT: {}", sentiment);
+//        log.info("POI: {}", poi);
+
+        return "http://www.robevans.uk/test.php?"
+                + "tweet=" + URLEncoder.encode(tweet, StandardCharsets.UTF_8.toString())
+                + "&user=" + URLEncoder.encode(user, StandardCharsets.UTF_8.toString())
+                + "&coin=" + URLEncoder.encode(currency, StandardCharsets.UTF_8.toString())
+                + "&sentiment=" + URLEncoder.encode(sentiment, StandardCharsets.UTF_8.toString())
+                + "&poi=" + URLEncoder.encode(poi+"", StandardCharsets.UTF_8.toString());
     }
 }
