@@ -88,10 +88,20 @@ public class TwitterStream {
         this.accessToken = accessToken;
         this.accessTokenSecret = accessTokenSecret;
 
-        if (apiKey==null || apiKey.equals(""))
+        if (apiKey==null || apiKey.equals("")) {
             apiKey = System.getenv("twitter.api_key");
-        if (apiSecret==null || apiSecret.equals(""))
+        }
+        if (apiSecret==null || apiSecret.equals("")) {
             apiSecret = System.getenv("twitter.api_secret");
+        }
+        if (accessToken==null || accessToken.equals("")) {
+            apiKey = System.getenv("twitter.access_token");
+        }
+        if (accessTokenSecret==null || accessTokenSecret.equals("")) {
+            apiSecret = System.getenv("twitter.access_token_secret");
+        }
+        log.info(apiKey);
+        log.info(apiSecret);
         this.searchTerms = searchTerms;
         this.userStreams = userStreams;
         initDataStructures();
