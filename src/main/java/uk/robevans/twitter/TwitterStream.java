@@ -100,8 +100,6 @@ public class TwitterStream {
         if (accessTokenSecret==null || accessTokenSecret.equals("")) {
             apiSecret = System.getenv("twitter.access_token_secret");
         }
-        log.info(apiKey);
-        log.info(apiSecret);
         this.searchTerms = searchTerms;
         this.userStreams = userStreams;
         initDataStructures();
@@ -230,24 +228,27 @@ public class TwitterStream {
         int poi = isPoi(aTweet);
         String tweetText = getTweet(aTweet);
         String twitterUser =  aTweet.getUser().getScreen_name();
-
+        String tweetId = aTweet.getId_str();
 
         String sentiment = ":|";
-        createEntryIfPoi(aTweet, tweetText, twitterUser, sentiment, poi);
+        createEntryIfPoi(aTweet, tweetText, twitterUser, sentiment, poi, tweetId);
 
         String searchTermsMatched = findMatchedSearchTerms(tweetText);
-        checkForPositiveSentiment(tweetText, twitterUser, searchTermsMatched);
-        checkForNegativeSentiment(tweetText, twitterUser, searchTermsMatched);
+        if (poi!=1) {
+
+            checkForPositiveSentiment(tweetText, twitterUser, searchTermsMatched, tweetId);
+            checkForNegativeSentiment(tweetText, twitterUser, searchTermsMatched, tweetId);
+        }
 
 //        boolean found = checkForSearchTerms(tweetText, twitterUserUrl, searchTermsMatched, sentiment, poi);
 
     }
 
-    private void createEntryIfPoi(ATweet aTweet, String tweetText, String twitterUserUrl, String sentiment, int poi) {
+    private void createEntryIfPoi(ATweet aTweet, String tweetText, String twitterUserUrl, String sentiment, int poi, String tweetId) {
         logIfPoi(tweetText, twitterUserUrl, poi);
         try {
             if (poi == 1) {
-                String url = createInsertUrl(tweetText, twitterUserUrl, "", sentiment, poi);
+                String url = createInsertUrl(tweetText, twitterUserUrl, "", sentiment, poi, tweetId);
                 log.debug(url);
                 insertTweet(url);
             }
@@ -262,7 +263,7 @@ public class TwitterStream {
 
     private void logIfPoi(String tweetText, String twitterUserUrl, int poi) {
         if (poi == 1) {
-            log.info("*** {}", twitterUserUrl);
+            log.info("*** {}", "https://www.twitter.com/" + twitterUserUrl);
             log.info("*** {}", tweetText);
             // continue to process it like any other tweet after this.
         }
@@ -315,46 +316,32 @@ public class TwitterStream {
                 .replace("\n", "")
                 .replace("\\", "\\\\")
                 .replace("'", "\\'")
-                .replace("@", "\\@");
+                .replace("$", "\\$");
     }
 
-    private void checkForPositiveSentiment(String tweetText, String twitterUser, String searchTermsMatched) {
+    private void checkForPositiveSentiment(String tweetText, String twitterUser, String searchTermsMatched, String tweetId) {
         try {
             if (isPositiveMessage(tweetText)) {
                 log.info(":) - {} --- {} | {}", searchTermsMatched, "https://www.twitter.com/" + twitterUser, tweetText);
-                String url = createInsertUrl(tweetText, twitterUser, searchTermsMatched, ":)", 0);
+                String url = createInsertUrl(tweetText, twitterUser, searchTermsMatched, ":)", 0, tweetId);
                 log.debug(url);
                 insertTweet(url);
             }
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-
-
-//        createInsertUrl(tweetText, twitterUserUrl, )
-//        int newCount = positiveCounts.get(counterIndex) + 1;
-//        positiveCounts.set(counterIndex, newCount);
-//        String updatedCounter = newCount + "";
-
-//        if (aTweet.getRetweet_count() >= 10) {
-//            log.info("10 :) - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetMade, twitterUserUrl);
-//        } else {
-//            log.info(":) - {} - {} --- {} | {}", searchTermFound, updatedCounter, tweetText, twitterUserUrl);
-//        }
-
-//        return true;
     }
 
     private String getTwitterUserUrl(ATweet aTweet) {
         return "https://www.twitter.com/" + aTweet.getUser().getScreen_name();
     }
 
-    private void checkForNegativeSentiment(String tweetText, String twitterUser, String searchTermsMatched) {
+    private void checkForNegativeSentiment(String tweetText, String twitterUser, String searchTermsMatched, String tweetId) {
 
         try {
             if (isNegativeMessage(tweetText)) {
                 log.info(":( - {} --- {} | {}", searchTermsMatched, "https://www.twitter.com/" + twitterUser, tweetText);
-                String url = createInsertUrl(tweetText, twitterUser, searchTermsMatched, ":(", 0);
+                String url = createInsertUrl(tweetText, twitterUser, searchTermsMatched, ":(", 0, tweetId);
                 log.debug(url);
                 insertTweet(url);
             }
@@ -477,7 +464,7 @@ public class TwitterStream {
         }
     }
 
-    private String createInsertUrl(String tweet, String user, String currency, String sentiment, int poi) throws UnsupportedEncodingException {
+    private String createInsertUrl(String tweet, String user, String currency, String sentiment, int poi, String tweetId) throws UnsupportedEncodingException {
 //        log.info("TWEET: {}", tweet);
 //        log.info("USER: {}", user);
 //        log.info("COIN: {}", currency);
@@ -489,6 +476,7 @@ public class TwitterStream {
                 + "&user=" + URLEncoder.encode(user, StandardCharsets.UTF_8.toString())
                 + "&coin=" + URLEncoder.encode(currency, StandardCharsets.UTF_8.toString())
                 + "&sentiment=" + URLEncoder.encode(sentiment, StandardCharsets.UTF_8.toString())
-                + "&poi=" + URLEncoder.encode(poi+"", StandardCharsets.UTF_8.toString());
+                + "&poi=" + URLEncoder.encode(poi+"", StandardCharsets.UTF_8.toString())
+                + "&tweet_id=" + URLEncoder.encode(tweetId, StandardCharsets.UTF_8.toString());
     }
 }

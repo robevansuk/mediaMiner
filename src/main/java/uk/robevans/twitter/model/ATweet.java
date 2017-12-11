@@ -21,7 +21,7 @@ public class ATweet {
     String in_reply_to_user_id_str;
     String in_reply_to_screen_name;
     TwitterUser user;
-    String geo;
+    Object geo;
     Object coordinates; // todo coordinates { coordinates : [], type: string }
     Object place;
     String contributors;
@@ -34,7 +34,7 @@ public class ATweet {
     Boolean favorited;
     String current_user_retweet;
     Boolean withheld_copyright;
-    String withheld_in_countries;
+    String[] withheld_in_countries;
     Boolean retweeted;
     Boolean possibly_sensitive;
     String filter_level;
@@ -44,7 +44,7 @@ public class ATweet {
     public ATweet() {
     }
 
-    public ATweet(String created_at, Long id, String id_str, String text, String source, Boolean truncated, List<Integer> display_text_range, String source1, String rel, Boolean truncated1, Long in_reply_to_status_id, String in_reply_to_status_id_str, Long in_reply_to_user_id, String in_reply_to_user_id_str, String in_reply_to_screen_name, TwitterUser user, String geo, Object coordinates, Object place, String contributors, Boolean is_quote_status, Integer quote_count, Integer reply_count, Integer retweet_count, Integer favorite_count, Object entities, Boolean favorited, String current_user_retweet, Boolean withheld_copyright, String withheld_in_countries, Boolean retweeted, Boolean possibly_sensitive, String filter_level, String lang, String timestamp_ms) {
+    public ATweet(String created_at, Long id, String id_str, String text, String source, Boolean truncated, List<Integer> display_text_range, String source1, String rel, Boolean truncated1, Long in_reply_to_status_id, String in_reply_to_status_id_str, Long in_reply_to_user_id, String in_reply_to_user_id_str, String in_reply_to_screen_name, TwitterUser user, String geo, Object coordinates, Object place, String contributors, Boolean is_quote_status, Integer quote_count, Integer reply_count, Integer retweet_count, Integer favorite_count, Object entities, Boolean favorited, String current_user_retweet, Boolean withheld_copyright, String[] withheld_in_countries, Boolean retweeted, Boolean possibly_sensitive, String filter_level, String lang, String timestamp_ms) {
         this.created_at = created_at;
         this.id = id;
         this.id_str = id_str;
@@ -187,11 +187,11 @@ public class ATweet {
         this.user = user;
     }
 
-    public String getGeo() {
+    public Object getGeo() {
         return geo;
     }
 
-    public void setGeo(String geo) {
+    public void setGeo(Object geo) {
         this.geo = geo;
     }
 
@@ -291,11 +291,11 @@ public class ATweet {
         this.withheld_copyright = withheld_copyright;
     }
 
-    public String getWithheld_in_countries() {
+    public String[] getWithheld_in_countries() {
         return withheld_in_countries;
     }
 
-    public void setWithheld_in_countries(String withheld_in_countries) {
+    public void setWithheld_in_countries(String[] withheld_in_countries) {
         this.withheld_in_countries = withheld_in_countries;
     }
 
